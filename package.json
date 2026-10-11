@@ -1,0 +1,13 @@
+{
+  "name": "truecvfit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tailor your CV to a job description without inventing anything. No sign-up, nothing stored.",
+  "scripts": {
+    "test": "node test/engine.test.cjs && node test/worker.test.mjs",
+    "dev": "npx wrangler dev",
+    "deploy": "npx wrangler deploy"
+  },
+  "license": "MIT",
+  "author": "Abdulraheem Oki"
+}

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>TrueCVFit — tailor your CV without the fluff</title>
+  <meta name="description" content="Free CV tailoring tool. Paste your CV and a job description: TrueCVFit reorders and rephrases what you've already done to match the job, shows the gaps, and never invents anything. No sign-up, nothing saved.">
+  <meta name="theme-color" content="#1f43b8">
+  <meta property="og:title" content="TrueCVFit — tailor your CV without the fluff">
+  <meta property="og:description" content="Match your CV to any job in a minute. No sign-up, nothing saved, nothing invented.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/bricolage-grotesque-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/atkinson-hyperlegible-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to the form</a>
+
+  <header class="site-head">
+    <div class="wrap">
+      <p class="wordmark">TrueCVFit</p>
+      <div class="tape" aria-hidden="true"></div>
+      <h1>Tailor your CV without the fluff.</h1>
+      <p class="lede">Paste your CV and the job you want. We put your most relevant experience first, rephrase it in the job's language, and show you what the job asks for that your CV doesn't. We never add anything you didn't write.</p>
+      <ul class="promises">
+        <li>No sign-up</li>
+        <li>Nothing saved</li>
+        <li>Free</li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <!-- ============ FORM ============ -->
+    <form id="form" class="steps" novalidate>
+      <section class="step" aria-labelledby="s1">
+        <h2 id="s1"><span class="num" aria-hidden="true">1</span> Your CV</h2>
+        <p class="help">Use your fullest, most detailed CV. The tool can only work with what you give it.</p>
+        <div class="field-tools">
+          <label class="upload">
+            <input type="file" id="cvFile" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+            <span>Upload PDF or Word</span>
+          </label>
+          <span class="file-note" id="cvFileNote" aria-live="polite"></span>
+        </div>
+        <label class="sr" for="cv">Your CV</label>
+        <textarea id="cv" rows="9" placeholder="…or paste your CV here" spellcheck="false"></textarea>
+      </section>
+
+      <section class="step" aria-labelledby="s2">
+        <h2 id="s2"><span class="num" aria-hidden="true">2</span> The job</h2>
+        <label class="label" for="title">Job title</label>
+        <input id="title" type="text" autocomplete="off" placeholder="e.g. Social Media Assistant" maxlength="120">
+        <label class="label" for="jd">Job description</label>
+        <div class="field-tools">
+          <label class="upload">
+            <input type="file" id="jdFile" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+            <span>Upload PDF or Word</span>
+          </label>
+          <span class="file-note" id="jdFileNote" aria-live="polite"></span>
+        </div>
+        <textarea id="jd" rows="8" placeholder="Paste the full job advert, including the requirements" spellcheck="false"></textarea>
+      </section>
+
+      <section class="step step-go" aria-labelledby="s3">
+        <h2 id="s3"><span class="num" aria-hidden="true">3</span> Tailor it</h2>
+        <button type="submit" id="go" class="btn btn-primary btn-big">Tailor my CV</button>
+        <p class="hint" id="hint" aria-live="polite"></p>
+      </section>
+    </form>
+
+    <!-- ============ WORKING ============ -->
+    <section id="working" class="working" hidden aria-live="polite">
+      <div class="tape tape-run" aria-hidden="true"></div>
+      <p class="working-msg" id="workingMsg">Reading the job description…</p>
+      <p class="help">This usually takes 10–30 seconds.</p>
+    </section>
+
+    <!-- ============ RESULTS ============ -->
+    <section id="results" class="results" hidden>
+      <h2 id="resultsTitle" tabindex="-1">Your tailored CV</h2>
+      <p class="summary" id="summary"></p>
+      <div class="notice" id="notice" hidden></div>
+
+      <div class="tabs" role="tablist" aria-label="Results">
+        <button role="tab" id="tab-cv" aria-controls="panel-cv" aria-selected="true">Tailored CV</button>
+        <button role="tab" id="tab-gaps" aria-controls="panel-gaps" aria-selected="false" tabindex="-1">Gaps <span class="count" id="gapCount"></span></button>
+        <button role="tab" id="tab-changes" aria-controls="panel-changes" aria-selected="false" tabindex="-1">What changed <span class="count" id="changeCount"></span></button>
+      </div>
+
+      <div role="tabpanel" id="panel-cv" aria-labelledby="tab-cv" class="panel">
+        <p class="help">You can edit anything below before you copy or download it.</p>
+        <label class="sr" for="out">Tailored CV</label>
+        <textarea id="out" class="out" spellcheck="true"></textarea>
+        <div class="actionbar">
+          <p class="caveat"><strong>Check every line before you send it.</strong> We only rephrase what you gave us, but AI can still get things wrong.</p>
+          <div class="actions">
+            <button type="button" class="btn" id="copyBtn">Copy text</button>
+            <button type="button" class="btn" id="docxBtn">Word</button>
+            <button type="button" class="btn btn-primary" id="pdfBtn">PDF</button>
+          </div>
+          <p class="toast" id="toast" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+
+      <div role="tabpanel" id="panel-gaps" aria-labelledby="tab-gaps" class="panel" hidden>
+        <p class="help">These are things the job asks for that your CV doesn't clearly show. If you <em>do</em> have this experience, add it to your master CV in your own words and run TrueCVFit again. We will never add it for you.</p>
+        <div id="gaps"></div>
+      </div>
+
+      <div role="tabpanel" id="panel-changes" aria-labelledby="tab-changes" class="panel" hidden>
+        <p class="help">Every point we rephrased, next to what you wrote. If a rewrite added something you didn't say, we threw it away and kept your wording.</p>
+        <div id="changes"></div>
+      </div>
+
+      <div class="again">
+        <button type="button" class="btn" id="editBtn">Change the CV or job</button>
+        <button type="button" class="btn btn-quiet" id="resetBtn">Start over</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <div class="wrap">
+      <p><strong>Your privacy.</strong> Nothing you paste or upload is saved, on this site or in your browser. Files are read on your own device. Your name and contact details never leave it. Only the CV points that relate to the job are sent, once, to Cloudflare's AI to be rephrased, and Cloudflare does not use them to train AI. Close the tab and it's gone.</p>
+      <p class="credit">Built by Abdulraheem Oki</p>
+    </div>
+  </footer>
+
+  <script src="js/engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

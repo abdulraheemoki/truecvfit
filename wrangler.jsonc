@@ -1,0 +1,24 @@
+{
+  // TrueCVFit — Cloudflare Worker settings.
+  // The "name" must match the Worker name in your Cloudflare dashboard.
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "truecvfit",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-01",
+
+  // The website files (HTML, CSS, JavaScript, fonts).
+  "assets": {
+    "directory": "./public/",
+    "binding": "ASSETS"
+  },
+
+  // Gives the Worker access to Cloudflare's AI models. No API key needed.
+  "ai": {
+    "binding": "AI"
+  },
+
+  // No request logging — nothing users send is kept.
+  "observability": {
+    "enabled": false
+  }
+}
