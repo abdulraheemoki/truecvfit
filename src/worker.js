@@ -11,17 +11,37 @@
  * Everything else (the website itself) is served from the /public folder.
  */
 
-// The AI model. Gemma 4 gives good quality for a small share of the free daily
-// allowance. If it is ever removed, swap in another model from
-// https://developers.cloudflare.com/workers-ai/models/
-const PRIMARY_MODEL = '@cf/google/gemma-4-26b-a4b-it';
-const BACKUP_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+// The AI models, tried in order. Both are fast "answer straight away" models
+// (no slow thinking step), so a phone never waits long. If one is ever
+// removed, swap in another from https://developers.cloudflare.com/workers-ai/models/
+const MODELS = [
+  { id: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', jsonMode: true },
+  { id: '@cf/mistralai/mistral-small-3.1-24b-instruct', jsonMode: false },
+];
+// Give up on a model after this long and try the next one.
+const MODEL_TIMEOUT_MS = 25_000;
+
+const RESPONSE_SCHEMA = {
+  type: 'object',
+  properties: {
+    bullets: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: { id: { type: 'string' }, text: { type: 'string' } },
+        required: ['id', 'text'],
+      },
+    },
+    profile: { type: 'string' },
+  },
+  required: ['bullets', 'profile'],
+};
 
 // Size limits so the free allowance can't be drained by giant requests.
 const MAX_BODY_BYTES = 60_000;
-const MAX_BULLETS = 30;
+const MAX_BULLETS = 15;
 const MAX_BULLET_CHARS = 600;
-const MAX_JD_CHARS = 7_000;
+const MAX_JD_CHARS = 4_000;
 const MAX_PROFILE_CHARS = 1_500;
 
 const SYSTEM_PROMPT = `You tailor CV bullet points to a specific job. You are strict about honesty.
@@ -98,13 +118,11 @@ async function handleTailor(request, env, url) {
   ];
 
   let lastError = 'ai_failed';
-  for (const model of [PRIMARY_MODEL, BACKUP_MODEL]) {
+  for (const model of MODELS) {
     try {
-      const result = await env.AI.run(model, {
-        messages,
-        max_tokens: 4000,
-        temperature: 0.2,
-      });
+      const input = { messages, max_tokens: 2500, temperature: 0.2 };
+      if (model.jsonMode) input.response_format = { type: 'json_schema', json_schema: RESPONSE_SCHEMA };
+      const result = await withTimeout(env.AI.run(model.id, input), MODEL_TIMEOUT_MS);
       const parsed = parseModelJson(extractText(result));
       if (parsed) {
         const known = new Set(bullets.map((b) => b.id));
@@ -118,13 +136,21 @@ async function handleTailor(request, env, url) {
     } catch (err) {
       const msg = String((err && err.message) || err);
       // The free daily allowance has run out (resets at midnight UTC).
-      if (/neuron|quota|allocation|limit|429|4006|capacity/i.test(msg)) {
+      if (/neuron|quota|allocation|daily|4006|429|capacity/i.test(msg)) {
         return json({ error: 'daily_limit' }, 429);
       }
-      lastError = 'ai_failed';
+      lastError = /timeout/i.test(msg) ? 'ai_timeout' : 'ai_failed';
     }
   }
   return json({ error: lastError }, 502);
+}
+
+function withTimeout(promise, ms) {
+  let timer;
+  return Promise.race([
+    promise.finally(() => clearTimeout(timer)),
+    new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('timeout')), ms); }),
+  ]);
 }
 
 /** Different models return text in slightly different shapes. */

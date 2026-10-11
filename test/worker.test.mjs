@@ -21,7 +21,7 @@ function req(body, headers = {}) {
 }
 const good = { jobTitle: 'Social Media Assistant', jd: 'Create content for Instagram.', bullets: [{ id: 'b1', text: 'Wrote captions for Instagram posts' }], profile: '' };
 
-await t('returns rewrites from a Gemma-style (choices) response', async () => {
+await t('returns rewrites from a OpenAI-style (choices) response', async () => {
   const res = await worker.fetch(req(good), env(async () => ({ choices: [{ message: { content: '```json\n{"bullets":[{"id":"b1","text":"Wrote Instagram captions"}],"profile":""}\n```' } }] })));
   assert.strictEqual(res.status, 200);
   const data = await res.json();
@@ -77,6 +77,23 @@ await t('never sends the AI anything outside the allowed fields', async () => {
   let seen;
   await worker.fetch(req({ ...good, email: 'secret@x.com', name: 'Secret Name' }), env(async (m, input) => { seen = JSON.stringify(input); return { response: '{"bullets":[],"profile":""}' }; }));
   assert.ok(!seen.includes('secret@x.com') && !seen.includes('Secret Name'));
+});
+
+await t('moves on to the backup model if the first one hangs', async () => {
+  let calls = 0;
+  const realTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = (fn, ms) => realTimeout(fn, Math.min(ms, 20));
+  try {
+    const res = await worker.fetch(req(good), env(async (model) => { calls++; if (calls === 1) return new Promise(() => {}); return { response: '{"bullets":[],"profile":""}' }; }));
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(calls, 2);
+  } finally { globalThis.setTimeout = realTimeout; }
+});
+
+await t('asks the first model for strict JSON', async () => {
+  let input;
+  await worker.fetch(req(good), env(async (m, i) => { input = input || i; return { response: '{"bullets":[],"profile":""}' }; }));
+  assert.strictEqual(input.response_format.type, 'json_schema');
 });
 
 console.log(`\n${passed} tests passed`);

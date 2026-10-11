@@ -209,11 +209,10 @@ input[type=text]:focus, textarea:focus { outline: none; border-color: var(--chal
   white-space: pre-wrap;
 }
 .actionbar {
-  position: sticky; bottom: 0;
-  margin: 12px -16px 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  margin: 0 0 12px; padding: 14px;
   background: var(--surface);
-  border-top: 1.5px solid var(--line);
-  box-shadow: 0 -8px 24px -18px rgba(0, 0, 0, .5);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
 }
 .caveat { font-size: 14px; color: var(--muted); }
 .caveat strong { color: var(--ink); }
@@ -258,7 +257,6 @@ details.gap-group[open] > summary h3::after { content: 'Hide'; }
 
 @media (min-width: 720px) {
   .step { padding: 22px 24px; }
-  .actionbar { margin: 12px 0 0; border: 1.5px solid var(--line); border-radius: var(--radius); }
 }
 @media (prefers-reduced-motion: reduce) {
   .tape-run { animation: none; }

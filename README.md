@@ -65,7 +65,7 @@ The **What changed** tab shows every rewrite next to the original, including the
 ## Tech
 
 - **Front end:** plain HTML, CSS and JavaScript. No framework, no build step.
-- **Back end:** one Cloudflare Worker (`src/worker.js`) using Workers AI (Gemma 4, with Llama 3.3 as a backup).
+- **Back end:** one Cloudflare Worker (`src/worker.js`) using Workers AI (Llama 3.3 70B, with Mistral Small 3.1 as a backup).
 - **File reading:** pdf.js, mammoth.js. **File output:** docx, jsPDF with Noto Sans (supports Yoruba and other accented names).
 - **Hosting:** Cloudflare Workers free plan, deployed automatically from this repository.
 

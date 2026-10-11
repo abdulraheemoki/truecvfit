@@ -377,7 +377,8 @@
     'experience experienc abilit able skill knowledge understand understanding strong excellent good proven demonstrable demonstrat ' +
     'desirable essential required must including working work candidate role will plus ideally preferred relevant ' +
     'similar equivalent level previous prior proficien proficient familiar familiarity confident comfortable ' +
-    'responsible responsibl have has you we our use using'
+    'responsible responsibl have has you we our use using way ways related subject either such basics basic ' +
+    'clear friendly timely meet own time help helping able support supporting ensure various any other etc'
   ).split(/\s+/).map(stem));
 
   function extractRequirements(jdText) {
@@ -398,6 +399,8 @@
     };
     for (const line of lines) {
       if (BULLET_RE.test(line)) { push(line); continue; }
+      // Short lines without a bullet are usually sub-headings ("What you will need").
+      if (wordCount(line) <= 5) continue;
       // Split long paragraphs into sentences and keep those that read like requirements.
       const sentences = line.split(/(?<=[.!?;])\s+(?=[A-Z(])/);
       for (const s of sentences) if (REQ_CUES.test(s)) push(s);
@@ -479,7 +482,7 @@
     const rewritable = parsed.items
       .filter((i) => i.kind === 'bullet' && i.score > 0)
       .sort((a, b) => b.score - a.score)
-      .slice(0, 30);
+      .slice(0, 15);
     const profile = parsed.items.find((i) => i.kind === 'profile');
 
     return {

@@ -180,22 +180,24 @@
         const res = await fetch('/api/tailor', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ jobTitle, jd: jd.slice(0, 7000), bullets: plan.toRewrite, profile: plan.profile ? plan.profile.text : '' }),
+          body: JSON.stringify({ jobTitle, jd: jd.slice(0, 4000), bullets: plan.toRewrite, profile: plan.profile ? plan.profile.text : '' }),
           signal: controller.signal,
         });
         clearTimeout(timer);
-        if (res.ok) {
-          ai = await res.json();
+        const raw = await res.text();
+        let data = {};
+        try { data = JSON.parse(raw); } catch { data = {}; }
+        if (res.ok && Array.isArray(data.bullets)) {
+          ai = data;
+        } else if (data.error === 'daily_limit') {
+          notice = 'The free AI rephrasing has reached its limit for today. Your CV has still been reordered to put your most relevant points first, and your gaps list is ready. Rephrasing will be back tomorrow.';
         } else {
-          const data = await res.json().catch(() => ({}));
-          notice = data.error === 'daily_limit'
-            ? 'The free AI rephrasing has reached its limit for today. Your CV has still been reordered to put your most relevant points first, and your gaps list is ready. Rephrasing will be back tomorrow.'
-            : 'The AI rephrasing isn\'t available right now. Your CV has still been reordered to put your most relevant points first, and your gaps list is ready. You can try again in a minute.';
+          notice = 'The AI rephrasing didn\'t work this time. Your CV has still been reordered to put your most relevant points first, and your gaps list is ready. Try again in a minute.';
         }
       } catch (err) {
         notice = navigator.onLine === false
           ? 'You seem to be offline, so we couldn\'t rephrase anything. Your CV has still been reordered and your gaps list is ready.'
-          : 'The AI rephrasing took too long or couldn\'t be reached. Your CV has still been reordered to put your most relevant points first, and your gaps list is ready.';
+          : 'The AI rephrasing took too long. Your CV has still been reordered to put your most relevant points first, and your gaps list is ready. Try again in a minute.';
       }
     } else {
       notice = 'None of your CV points clearly match this job\'s wording, so there was nothing to rephrase. Look at the Gaps tab to see what the job asks for.';
@@ -267,7 +269,7 @@
       const ul = el('ul', 'gap-list');
       for (const c of list) {
         const li = el('li', null, c.requirement);
-        if (c.status === 'partly' && c.missingWords.length) {
+        if (c.status !== 'missing' && c.missingWords.length) {
           li.appendChild(el('span', 'missing-words', 'Not found in your CV: ' + c.missingWords.slice(0, 5).join(', ')));
         }
         ul.appendChild(li);
