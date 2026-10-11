@@ -381,7 +381,7 @@
     'clear friendly timely meet own time help helping able support supporting ensure various any other etc'
   ).split(/\s+/).map(stem));
 
-  function extractRequirements(jdText) {
+  function extractRequirements(jdText, jobTitleHint) {
     const lines = normaliseText(jdText).split('\n').map((l) => l.trim()).filter(Boolean);
     const reqs = [];
     const seen = new Set();
@@ -404,6 +404,22 @@
       // Split long paragraphs into sentences and keep those that read like requirements.
       const sentences = line.split(/(?<=[.!?;])\s+(?=[A-Z(])/);
       for (const s of sentences) if (REQ_CUES.test(s)) push(s);
+    }
+    // Fallback for keyword lists ("Fund manager", "GL reconciliation"...): if we
+    // found almost nothing, treat short non-heading lines as requirements.
+    if (reqs.length < 3) {
+      const HEADING_LIKE = /^(what you('|’)?ll|what you will|about (the|us|you)|the role|role|requirements?|responsibilities|key responsibilities|duties|desirable|essential|skills|benefits|how to apply|person specification|job description|overview|summary|location|salary|hours|contract)\b/i;
+      for (const line of lines) {
+        const clean = stripBullet(line).replace(/[;,.]$/, '').trim();
+        const wc = wordCount(clean);
+        if (wc < 1 || wc > 6 || /:$/.test(clean) || HEADING_LIKE.test(clean)) continue;
+        if (clean.length < 3) continue;
+        const key = clean.toLowerCase();
+        if (seen.has(key) || key === String(jobTitleHint || '').toLowerCase()) continue;
+        if (!stems(clean).filter((x) => !REQ_GENERIC.has(x)).length) continue;
+        seen.add(key);
+        reqs.push(clean);
+      }
     }
     return reqs.slice(0, 30);
   }
@@ -468,7 +484,7 @@
    */
   function analyse(cvText, jobTitle, jdText) {
     const parsed = parseCV(cvText);
-    const requirements = extractRequirements(jdText);
+    const requirements = extractRequirements(jdText, jobTitle);
     const weights = jdWeights(jdText, jobTitle, requirements);
 
     for (const it of parsed.items) {
@@ -604,6 +620,42 @@
       }
     }
 
+    // 6. Same tense as the original (a current role must stay current).
+    const firstWord = (t) => ((t.match(/[A-Za-z][A-Za-z'-]*/) || [''])[0]).toLowerCase();
+    const ow = firstWord(o);
+    const rw = firstWord(r);
+    const isPast = (w) => /ed$/.test(w) || Object.prototype.hasOwnProperty.call(IRREGULAR, w);
+    if (ow && rw && ow !== rw && stem(ow) === stem(rw) && isPast(rw) && !isPast(ow)) {
+      reasons.push(`It changed "${ow}" to "${rw}", which makes a current role sound like it has ended.`);
+    }
+
+    // 7. No first person if the original didn't use it.
+    if (/\b(I|me|my)\b/.test(r) && !/\b(I|me|my)\b/.test(o)) {
+      reasons.push('It switched to "I"/"my", which most UK CVs avoid.');
+    }
+
+    // 8. Nothing concrete dropped: every number and every name (a capitalised word
+    //    in the middle of a sentence) in the original must still be there.
+    if (ctx && ctx.mustKeep) {
+      const rLowerAll = r.toLowerCase();
+      for (const n of numbersIn(ctx.mustKeep)) {
+        if (!numbersIn(r).has(n)) { reasons.push(`It dropped "${n}" from your original.`); break; }
+      }
+      const names = [];
+      const re = /[A-Za-z][A-Za-z0-9+#&'’-]*/g;
+      let m;
+      while ((m = re.exec(ctx.mustKeep))) {
+        const word = m[0];
+        const before = ctx.mustKeep.slice(0, m.index).trimEnd();
+        const sentenceStart = before === '' || /[.!?:;•(]$/.test(before);
+        if (sentenceStart || !/^[A-Z]/.test(word)) continue;
+        const lower = word.toLowerCase();
+        if (BUZZWORDS.some((b) => b === lower)) continue;
+        if (!new RegExp('(^|[^a-z])' + lower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-z])').test(rLowerAll)) names.push(word);
+      }
+      if (names.length) reasons.push(`It dropped ${[...new Set(names)].slice(0, 3).map((w) => `"${w}"`).join(', ')} from your original.`);
+    }
+
     return { ok: reasons.length === 0, reasons: [...new Set(reasons)] };
   }
 
@@ -633,7 +685,7 @@
       if (it.kind === 'bullet' && byId.has(it.id)) {
         const proposed = byId.get(it.id).replace(BULLET_RE, '').trim();
         if (proposed === it.text) continue;
-        const check = checkRewrite(it.text, proposed, ctx);
+        const check = checkRewrite(it.text, proposed, { ...ctx, mustKeep: it.text });
         changes.push({ id: it.id, kind: 'bullet', original: it.text, proposed, used: check.ok, reasons: check.reasons });
         if (check.ok) it.text = proposed;
       }
@@ -641,7 +693,7 @@
         const proposed = aiResult.profile.trim();
         if (proposed !== it.text) {
           // A profile may draw on anything in the CV body, so check it against the whole body.
-          const check = checkRewrite(it.text + ' ' + bodyText, proposed, ctx);
+          const check = checkRewrite(it.text + ' ' + bodyText, proposed, { ...ctx, mustKeep: it.text });
           if (proposed.length > Math.max(it.text.length * 1.4, 500)) {
             check.ok = false;
             check.reasons.push('The rewrite was much longer than your original.');

@@ -131,7 +131,7 @@
     const problems = [];
     if (cvEl.value.trim().length < 200) problems.push('add your CV');
     if (titleEl.value.trim().length < 2) problems.push('add the job title');
-    if (jdEl.value.trim().length < 150) problems.push('paste the full job description');
+    if (jdEl.value.trim().length < 40) problems.push('paste the job description (the full advert works best)');
     if (show && problems.length) {
       hint.classList.add('err');
       hint.textContent = 'To continue, ' + listify(problems) + '.';
@@ -203,6 +203,10 @@
       notice = 'None of your CV points clearly match this job\'s wording, so there was nothing to rephrase. Look at the Gaps tab to see what the job asks for.';
     }
 
+    if (jd.trim().length < 400) {
+      const shortNote = 'You pasted a short job description, so this match is rough. For a better result, paste the full advert, especially the responsibilities and requirements.';
+      notice = notice ? shortNote + ' ' + notice : shortNote;
+    }
     const result = E.assemble(plan, ai, jd, jobTitle);
     clearInterval(ticker);
     showResults(plan, result, notice);

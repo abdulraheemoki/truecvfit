@@ -145,4 +145,33 @@ t('wrapped PDF bullet lines are joined', () => {
   assert.deepStrictEqual(bullets, ['Answered phones and emails for a team of ten people and booked meetings', 'Filed invoices']);
 });
 
+const keep = (o, r) => E.checkRewrite(o, r, { jdText: jd, mustKeep: o });
+
+t('changing a current role to past tense is rejected', () => {
+  assert.ok(!keep('Run the Saturday Craft Club for children and families, leading hands-on craft activities.', 'Ran the Saturday Craft Club for children and families, leading hands-on craft activities.').ok);
+  assert.ok(!keep('Support children during classroom activities.', 'Supported children during classroom activities.').ok);
+});
+t('keeping present tense is accepted', () => {
+  const r = keep('Run the Saturday Craft Club for children and families, leading hands-on craft activities.', 'Run the Saturday Craft Club for children and families, leading hands-on craft activities');
+  assert.ok(r.ok, r.reasons.join(' '));
+});
+t('past tense stays allowed when the original was past tense', () => {
+  const r = keep('Wrote captions for Facebook and Instagram posts', 'Wrote Instagram and Facebook captions');
+  assert.ok(r.ok, r.reasons.join(' '));
+});
+t('switching to "I" is rejected', () => {
+  assert.ok(!keep('Runs a Saturday Craft Club for children.', 'I run a Saturday Craft Club for children.').ok);
+});
+t('dropping an achievement from the profile is rejected', () => {
+  const o = 'Compassionate and dedicated SEN Teaching Assistant. Studying for an MSc in Management with Digital Marketing at the University of Hertfordshire (on track for a Distinction).';
+  const r = keep(o, 'SEN Teaching Assistant studying for an MSc in Management with Digital Marketing at the University of Hertfordshire.');
+  assert.ok(!r.ok);
+  assert.ok(r.reasons.some((x) => /Distinction/.test(x)), r.reasons.join(' '));
+});
+t('removing only buzzwords from the profile is accepted', () => {
+  const o = 'Compassionate and dedicated SEN Teaching Assistant. Studying for an MSc in Management with Digital Marketing at the University of Hertfordshire (on track for a Distinction).';
+  const r = keep(o, 'SEN Teaching Assistant studying for an MSc in Management with Digital Marketing at the University of Hertfordshire, on track for a Distinction.');
+  assert.ok(r.ok, r.reasons.join(' '));
+});
+
 console.log(`\n${passed} tests passed`);

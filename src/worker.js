@@ -50,12 +50,14 @@ RULES — follow every one:
 1. Rephrase only. Every fact in your version must already be in that same original bullet. Never add a skill, tool, platform, software, employer, qualification, number, result, responsibility, audience or outcome that the original does not state.
 2. Never make the person sound more senior. If the original says "helped", "supported" or "assisted", keep that level. Do not use led, managed, oversaw, supervised, spearheaded, drove, owned, coordinated, mentored or launched unless the original already says so.
 3. Keep every number exactly as written. Do not add numbers.
-4. You may borrow the job description's wording ONLY to describe something the bullet already says. Never borrow a duty or skill the bullet doesn't mention.
-5. Be plain and specific. Start with a past-tense action verb where the original describes an action. One sentence. Keep it about the same length as the original or shorter.
-6. Never use these words or anything like them: passionate, dynamic, results-driven, detail-oriented, hard-working, motivated, dedicated, proactive, innovative, team player, self-starter, leverage, utilise, seamless, robust, synergy, spearheaded, fast-paced, proven track record, excellent communication skills, foster, empower, elevate, showcase, navigate, streamline, optimise, enhance, impactful, exceptional, outstanding, pivotal, instrumental.
-7. Use British spelling unless the original uses American spelling.
-8. If you cannot improve a bullet honestly, return it unchanged.
-9. For the profile (if given): write 2 or 3 short, concrete sentences using ONLY facts found in the profile or the bullets provided. No personality adjectives. No claims about passion or enthusiasm. If no profile is given, return an empty string.
+4. KEEP THE SAME TENSE AS THE ORIGINAL. If the original says "Support", "Run" or "Build" (present tense, a current role), keep present tense. Only use past tense if the original already does. Changing tense changes the meaning.
+5. Never use "I", "me" or "my".
+6. What "tailoring" means here: put the part of the bullet that matters most to this job first, and use the job description's wording where it describes the SAME thing the bullet already says. Never borrow a duty or skill the bullet doesn't mention.
+7. Be plain and specific. One sentence. About the same length as the original or shorter.
+8. Never use these words or anything like them: passionate, dynamic, results-driven, detail-oriented, hard-working, motivated, dedicated, compassionate, proactive, innovative, team player, self-starter, leverage, utilise, seamless, robust, synergy, spearheaded, fast-paced, thrive, proven track record, excellent communication skills, foster, empower, elevate, showcase, navigate, streamline, optimise, enhance, impactful, exceptional, outstanding, pivotal, instrumental.
+9. Use British spelling unless the original uses American spelling.
+10. If you cannot improve a bullet honestly, return it unchanged.
+11. For the profile (if given): remove empty adjectives and clichés, but KEEP EVERY CONCRETE FACT — every role, place, organisation, qualification, grade and achievement (for example "on track for a Distinction" must stay). Put the facts most relevant to this job first. Same tense and point of view as the original, no "I". About the same length or shorter. If no profile is given, return an empty string.
 
 Reply with JSON only, no other text, in exactly this shape:
 {"bullets":[{"id":"<same id>","text":"<your version>"}],"profile":"<text or empty string>"}`;

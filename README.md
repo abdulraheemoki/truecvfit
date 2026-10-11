@@ -50,6 +50,9 @@ Every AI rewrite is compared with the user's original point by plain code (`publ
 | Adds a buzzword | "fast-paced", "results-driven", "leverage", "passionate" … |
 | Copies a duty or skill from the job description | "wrote captions" → "wrote captions and monitored engagement" |
 | Is much longer than the original | padding |
+| Changes the tense of a current role | "Run the Saturday club" → "Ran the Saturday club" |
+| Switches to "I" / "my" | "Runs a craft club" → "I run a craft club" |
+| Drops a name, number or achievement | removing "on track for a Distinction" from a profile |
 
 The **What changed** tab shows every rewrite next to the original, including the rejected ones and why they were rejected.
 
